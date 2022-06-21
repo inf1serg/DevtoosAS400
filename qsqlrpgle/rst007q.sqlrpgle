@@ -13,6 +13,6 @@
 
         exec sql                                                   
             UPDATE AXAREAL/SEHNI2P SET
-            namail = 'u.01@srvdesa.com.ar';
+            npmail = 'u.01@srvdesa.com.ar';
 
         return;
