@@ -1,0 +1,23 @@
+PGM
+
+             DLTF       FILE(AXAREAL/P6WEC1)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(AXAREAL/P6WED0)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(AXAREAL/P6WEV1)
+             MONMSG     MSGID(CPF2105)
+             CPYF       FROMFILE(AXAREAL/PAWEC1) +
+                          TOFILE(AXAREAL/P6WEC1) MBROPT(*REPLACE) +
+                          CRTFILE(*YES)
+             CPYF       FROMFILE(AXAREAL/PAWED0) +
+                          TOFILE(AXAREAL/P6WED0) MBROPT(*REPLACE) +
+                          CRTFILE(*YES)
+             CPYF       FROMFILE(AXAREAL/PAWEV1) +
+                          TOFILE(AXAREAL/P6WEV1) MBROPT(*REPLACE) +
+                          CRTFILE(*YES)
+
+             CLRPFM     FILE(AXAREAL/PAWEC1)
+             CLRPFM     FILE(AXAREAL/PAWED0)
+             CLRPFM     FILE(AXAREAL/PAWEV1)
+
+ENDPGM

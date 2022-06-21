@@ -1,0 +1,60 @@
+PGM
+
+             DCL        VAR(&DATETIME) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SYSNAME) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&LIBRARY) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LOG) TYPE(*CHAR) LEN(5)
+
+             RTVNETA    SYSNAME(&SYSNAME)
+
+/* ---------------------------------------------------------------- */
+/* En POWER7 no se ejecuta                                          */
+/* ---------------------------------------------------------------- */
+             IF         COND(&SYSNAME = 'POWER7') THEN(DO)
+             GOTO       CMDLBL(FIN)
+             ENDDO
+
+/* Armo lista */
+             CALL       PGM(TAATOOL/SPWLIBLC) PARM(P)
+             RMVLIBLE   LIB(DESATOOLS)
+             MONMSG     MSGID(CPF2110 CPF2104)
+             ADDLIBLE   LIB(DESATOOLS)
+             MONMSG     MSGID(CPF2103)
+
+             CHGJOB     JOBPTY(5) OUTPTY(5) RUNPTY(5)
+
+/* ---------------------------------------------------------------- */
+/* Autorizar los objetos                                            */
+/* ---------------------------------------------------------------- */
+CHGVAR VAR(&LIBRARY) VALUE('AXAREAL')
+CALL PGM(DESATOOLS/RST001) PARM(&LIBRARY &LOG)
+
+/* ---------------------------------------------------------------- */
+/* Datos                                                            */
+/* ---------------------------------------------------------------- */
+CALL PGM(RST200A)
+
+/* ---------------------------------------------------------------- */
+/* Servidores HTTP                                                  */
+/* ---------------------------------------------------------------- */
+STRTCPSVR  SERVER(*HTTP) HTTPSVR(WSREST)
+STRTCPSVR  SERVER(*HTTP) HTTPSVR(QUOMWS01)
+STRTCPSVR  SERVER(*HTTP) HTTPSVR(QUOMWS02)
+
+/* ---------------------------------------------------------------- */
+/* Reconecto Triggers                                               */
+/* ---------------------------------------------------------------- */
+/*ADDPFTRG   FILE(AXAREAL/GTI987) TRGTIME(*AFTER) +
+             TRGEVENT(*INSERT) PGM(AXA.PGMR/TGRSPW) +
+             RPLTRG(*YES) ALWREPCHG(*YES) +
+MONMSG     MSGID(CPF32C6)                 */
+
+/* ---------------------------------------------------------------- */
+/* Pongo fecha y hora de ultimo restore                             */
+/* ---------------------------------------------------------------- */
+RTVSYSVAL  SYSVAL(QDATETIME) RTNVAR(&DATETIME)
+CHGDTAARA  DTAARA(DESATOOLS/DTALSTDTA (1 20)) +
+             VALUE(&DATETIME)
+
+FIN:
+ENDPGM

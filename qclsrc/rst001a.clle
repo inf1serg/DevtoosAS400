@@ -1,0 +1,23 @@
+PGM
+
+DCL VAR(&SYSNAME) TYPE(*CHAR) LEN(10)
+
+/* ---------------------------------------------------------------- */
+/* En POWER7 no se ejecuta                                          */
+/* ---------------------------------------------------------------- */
+CALL PGM(DESATOOLS/RSTSYN) PARM(&SYSNAME)
+IF COND(&SYSNAME = 'POWER7') THEN(DO)
+   GOTO CMDLBL(FIN)
+ENDDO
+
+CALL PGM(DESATOOLS/RSTLIBL)         /* Armo lista            */
+CALL PGM(RSTTRG) PARM('D')          /* Desconecto trigger    */
+CALL PGM(RSTAUTA)                   /* Autorizar los objetos */
+CALL PGM(RST200A)                   /* Datos                 */
+CALL PGM(RSTHTTPA)                  /* Servidores HTTP       */
+CALL PGM(RSTTRG) PARM('C')          /* Reconecto Triggers    */
+CALL PGM(RSTENT)                    /* Entorno especifico    */
+CALL PGM(RSTEND)                    /* The Great Finale      */
+
+FIN:
+ENDPGM

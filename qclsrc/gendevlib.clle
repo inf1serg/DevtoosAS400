@@ -1,0 +1,11 @@
+pgm parm(&nro &lib)
+    dcl var(&nro) type(*char) len(4)
+    dcl var(&lib) type(*char) len(10)
+    dcl var(&fil) type(*char) len(10)
+    crtlib lib(&lib) type(*test)
+    crtsrcpf file(&lib/qcpybooks) rcdlen(112)
+    crtsrcpf file(&lib/qdebug)    rcdlen(112)
+    crtsrcpf file(&lib/qsrvsrc)   rcdlen(92)
+    chgvar var(&fil) value('QPEDI$' || &nro)
+    crtsrcpf file(&lib/&fil)     rcdlen(112)
+endpgm

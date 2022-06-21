@@ -1,0 +1,123 @@
+             PGM        PARM(&JOBTYP)
+/* Arma el entorno de trabajo según lo solicitado por el     */
+/* usuario. Si se usa desde un Trigger, deberá ser invocado  */
+/* con calificador de biblioteca (p.ej. AXA.PGMR/SPWLIBL)    */
+/*                                                           */
+/* Leopoldo Uranga             *     29/072004               */
+/*************************************************************/
+/*             M O D I F I C A C I O N E S                   */
+/*-----------------------------------------------------------*/
+/* SGF 06/04/11: Agrego AXA.LOG.                             */
+/* SGF 12/11/13: Soporte para QUSER. Si el usuario del traba-*/
+/*               jo es QUSER, uso CURRENT USER.              */
+/* SGF 25/11/14: No existe más DEMOCTA.                      */
+/* SGF 28/04/15: Agrego QUOMDATA.                            */
+/*                                                           */
+/*************************************************************/
+DCL        VAR(&JOBTYP) TYPE(*CHAR) LEN(1) /* Tipo de entorno a generar. */
+
+/*Variables del programa */
+DCL        VAR(&JOBUSER) TYPE(*CHAR) LEN(10) /* Usuario. */
+DCL        VAR(&CURUSER) TYPE(*CHAR) LEN(10) /* Usuario. */
+DCL        VAR(&LIBRARY) TYPE(*CHAR) LEN(10) /* Biblioteca de trabajo. */
+DCL        VAR(&SYSNAME) TYPE(*CHAR) LEN(8)
+
+/* Variables para rutina de manejo de errores.                     */
+DCL        VAR(&MSG) TYPE(*CHAR) LEN(100) /* Errores. */
+DCL        VAR(&ERRORSW) TYPE(*LGL) /* Errores. */
+DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7) /* Errores. */
+DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100) /* Errores. */
+DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10) /* Errores. */
+DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10) /* Errores. */
+DCL        VAR(&KEYVAR) TYPE(*CHAR) LEN(4) /* Errores. */
+
+MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(STDERR1)) /* Errores. */
+
+RTVJOBA    USER(&JOBUSER) CURUSER(&CURUSER) /* Recupera +
+                          atributos de trabajo. */
+
+             RTVSYSNAM  SYSNAME(&SYSNAME)
+
+      if cond(&jobuser = 'QUSER') then(do)
+           chgvar &jobuser &curuser
+      enddo
+/* ///////////////////////////// ARMADO DE ENTORNO DE TRABAJO //////////// */
+/* Chequea entornos para armado de *LIBL */
+IF         COND(&JOBTYP = 'P' *OR &JOBTYP = 'T' *OR &JOBTYP = 'I') THEN(DO) /* +
+             Alguno de los entorno permitidos de trabajo. */
+   CALL       PGM(INFXSEGU/LBADDXC0)
+   RMVLIBLE   LIB(&JOBUSER) /* Borra biblioteca de usuario. */
+   MONMSG     MSGID(CPF2110 CPF2104) /* No estaba o no existe. */
+   RMVLIBLE   LIB(AXAREAL) /* Archivos Reales. */
+   MONMSG     MSGID(CPF2104) /* No estaba. */
+   RMVLIBLE   LIB(AXA.LOG) /* Archivos Log. */
+   MONMSG     MSGID(CPF2104) /* No estaba. */
+   RMVLIBLE   LIB(TESTGAUS) /* Archivos de Test. */
+   MONMSG     MSGID(CPF2104) /* No estaba. */
+   RMVLIBLE   LIB(AXA.FILE) /* Archivos de Usuario */
+   MONMSG     MSGID(CPF2104) /* No estaba. */
+   RMVLIBLE   LIB(AXA.PGMR) /* Archivos de Usuario */
+   MONMSG     MSGID(CPF2104) /* No estaba. */
+   RMVLIBLE   LIB(QUOMDATA) /* Archivos Web */
+   MONMSG     MSGID(CPF2104) /* No estaba. */
+
+   ADDLIBLE   LIB(AXA.FILE)
+   MONMSG     MSGID(CPF2103)
+   ADDLIBLE   LIB(AXA.PGMR)
+   MONMSG     MSGID(CPF2103)
+
+   /*         Siempre va AXAREAL. */
+      ADDLIBLE   LIB(AXAREAL) POSITION(*AFTER AXA.FILE)
+      ADDLIBLE   LIB(AXA.LOG) POSITION(*AFTER AXA.FILE)
+      CHGVAR     VAR(&LIBRARY) VALUE('AXAREAL')
+
+   IF         COND(&JOBTYP *EQ 'I') THEN(DO) /* Testeo previo a Instalación +
+                incluye QSPDWY. */
+             ADDLIBLE   LIB(TESTGAUS) POSITION(*BEFORE AXA.PGMR)
+      MONMSG     MSGID(CPF2110 CPF2103) /* ©©©©©©©©©©©©©©©©© PROVISORIO +
+                   ©©©©©©©©©©©©©© */
+      ENDDO
+
+             ADDLIBLE   LIB(QUOMDATA) POSITION(*AFTER AXAREAL)
+             MONMSG MSGID(CPF2110 CPF2103)
+
+   /*         Bibliotecas de Programación si el usuario es INF1xxx. Coloca +
+                antes que todas. */
+   IF         COND(%SST(&JOBUSER 1 4) *EQ 'INF1') THEN(DO) /* La Biblioteca +
+                del usuario siempre va ANTES que la de programas adaptados. */
+      ADDLIBLE   LIB(&JOBUSER)
+      MONMSG     MSGID(CPF2110 CPF2103) /* Ya estaba o no existe. */
+   ENDDO
+
+   /*         ARMADO DE LA "LOCAL DATA AREA".              */
+   CALL       PGM(GAUS02) PARM(&LIBRARY 'W')
+   CALL       PGM(GAUS03)
+
+   IF COND(&SYSNAME = 'SOFTTEST') THEN(DO)
+      RMVLIBLE LIB(TESTGAUS)
+      MONMSG MSGID(CPF2110 CPF2104)
+      ADDLIBLE LIB(TESTGAUS)
+      MONMSG MSGID(CPF2103)
+   ENDDO
+
+   ENDDO      /* Algun entorno permitido. */
+
+ FINAL: RETURN /* Final normal del programa. */
+/**/
+ STDERR1: /* Subrutina estándar de manejo de errores */
+IF         COND(&ERRORSW) THEN(SNDPGMMSG MSGID(CPF0002) MSGF(QCPFMSG) +
+             MSGTYPE(*ESCAPE)) /* Chequeo de función. */
+CHGVAR     VAR(&ERRORSW) VALUE('1') /* Setea como falla si ocurrió un error. */
+ STDERR2: RCVMSG MSGTYPE(*DIAG) RMV(*NO) KEYVAR(&KEYVAR) MSGDTA(&MSGDTA) +
+             MSGID(&MSGID) MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+          IF         COND(&KEYVAR *EQ '    ') THEN(GOTO CMDLBL(STDERR3))
+          RMVMSG     MSGKEY(&KEYVAR)
+          SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) MSGDTA(&MSGDTA) +
+                       MSGTYPE(*DIAG)
+          GOTO       CMDLBL(STDERR2) /* Loop atrás por diagnósticos +
+                       adicionales. */
+ STDERR3: RCVMSG     MSGTYPE(*EXCP) MSGDTA(&MSGDTA) MSGID(&MSGID) MSGF(&MSGF) +
+                       SNDMSGFLIB(&MSGFLIB)
+          SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) MSGDTA(&MSGDTA) +
+                       MSGTYPE(*ESCAPE)
+          ENDPGM

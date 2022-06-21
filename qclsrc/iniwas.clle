@@ -1,0 +1,14 @@
+PGM
+
+
+             SBMJOB     CMD(CALL PGM(QWAS85A/QWASSTRSVR) +
+                          PARM('-profilePath' +
+                          '/QIBM/UserData/WebSphere/AppServer/V85/Exp+
+                          ress/profiles/SOFTDESA' '-server' +
+                          'SOFTDESA')) JOB(SOFTDESA) +
+                          JOBD(QWAS85/QWASJOBD) +
+                          JOBQ(QWAS85/QWASJOBQ) JOBPTY(5) OUTPTY(5) +
+                          OUTQ(*DEV) USER(QEJBSVR) LOG(4 0 *SECLVL) +
+                          LOGCLPGM(*NO) LOGOUTPUT(*JOBEND)
+
+ENDPGM

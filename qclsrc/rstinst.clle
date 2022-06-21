@@ -1,0 +1,10 @@
+PGM PARM(&PEDI)
+    DCL VAR(&PEDI) TYPE(*CHAR) LEN(4)
+    DCL VAR(&FILE) TYPE(*CHAR) LEN(10)
+             CHGVAR     VAR(&FILE) VALUE('PEDI$' |< &PEDI)
+             RSTOBJ     OBJ(*ALL) SAVLIB(TESTGAUS) DEV(*SAVF) +
+                          SAVF(INSTALTEMP/&FILE) MBROPT(*ALL) +
+                          ALWOBJDIF(*ALL) RSTLIB(INSTALTEMP) +
+                          OUTPUT(*NONE) OMITOBJ((&FILE *FILE))
+             MONMSG     MSGID(CPF3773)
+ENDPGM

@@ -1,0 +1,24 @@
+PGM
+
+DCL VAR(&SYSNAME) TYPE(*CHAR) LEN(8)
+DCL VAR(&PEAUSU)  TYPE(*CHAR) LEN(10)
+
+RTVNETA SYSNAME(&SYSNAME)
+IF COND(&SYSNAME = 'POWER7') THEN(DO)
+   RETURN
+ENDDO
+
+CALL PGM(RST205A)                /* Borrar                              */
+CALL PGM(RST201Q)                /* Cambiar dominio y mails de usuarios */
+CALL PGM(RST004Q)                /* Mails de productores                */
+CALL PGM(RST007Q)                /* Mails productores Poliza            */
+CALL PGM(RST005Q)                /* Caja                                */
+CALL PGM(RST006Q)                /* Siniestros                          */
+CALL PGM(RST202Q) PARM(&SYSNAME) /* Procesos de mail y FTP              */
+CALL PGM(RST203Q) PARM(&SYSNAME) /* Conexiones MSSql                    */
+CALL PGM(RST206A)                /* Areas de Datos                      */
+CALL PGM(RST180)                 /* Borrar DTAQs                        */
+CALL PGM(RSTMENGAUS)             /* Autorizaciones de menu GAUS         */
+
+FINAL:
+ENDPGM

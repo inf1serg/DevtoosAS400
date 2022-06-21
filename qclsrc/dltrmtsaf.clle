@@ -1,0 +1,34 @@
+             PGM        PARM(&NROP)
+
+             DCL        VAR(&NROP) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&SYSNAME) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&USER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PASS) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CMD) TYPE(*CHAR) LEN(128)
+             DCL        VAR(&RMTHOST) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&LOGCLPGM) TYPE(*CHAR) LEN(10)
+
+             RTVNETA    SYSNAME(&SYSNAME)
+             RTVJOBA    LOGCLPGM(&LOGCLPGM)
+
+             CHGJOB     LOGCLPGM(*NO)
+
+             CHGVAR     VAR(&CMD) VALUE('DLTF FILE(FTPDESA/PEDI$' +
+                          |< &NROP |< ')')
+
+             IF         COND(&SYSNAME = 'SOFTDESA') THEN(DO)
+             CHGVAR     VAR(&RMTHOST) VALUE('SOFTTEST')
+             CHGVAR     VAR(&USER) VALUE('FTPDESA')
+             CHGVAR     VAR(&PASS) VALUE('FTPDESA1')
+             ENDDO
+
+             IF         COND(&SYSNAME = 'SOFTTEST') THEN(DO)
+             CHGVAR     VAR(&RMTHOST) VALUE('POWER7')
+             ENDDO
+
+             RUNRMTCMD  CMD(&CMD) RMTLOCNAME(&RMTHOST *IP) +
+                          RMTUSER(&USER) RMTPWD(&PASS)
+
+             CHGJOB     LOGCLPGM(&LOGCLPGM)
+
+             ENDPGM

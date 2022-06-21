@@ -1,0 +1,229 @@
+/*   F***************************************************************/
+/*   F*                   M O D I F I C A C I O N E S               */
+/*   F* HDT-HDT -08/10/93 -A la salida del GAUS02 remuevo de la     */
+/*   F*                    lista las bib. de archivo y pgms usuario.*/
+/*   F* HDT-HDT -19/12/94 -Grabo LDA si es sicone solo (sin gaus).  */
+/*   F* HDT-HDT -12/12/00 -Para Axa no eliminar la .FILE            */
+/*   F* SGF-SGF -25/09/14 -Elimino SEGU.SI1 por pedido 2908.        */
+/*   F* SGF-SGF -18/05/15 -Agrego/Elimino QUOMDATA.                 */
+/*   F* GIO-NIC -31/08/17 -MONMSG para eliminar biblioteca TESTGAUS */
+/*   F*                    si es el entorno de TEST                 */
+/*   F*                                                             */
+/*   F***************************************************************/
+ INICIO:     PGM
+             DCL        VAR(&LIBR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BIUA) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BIUP) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&USER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LMAN) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&CODI) TYPE(*DEC) LEN(1 0) VALUE(3)
+             DCL        VAR(&SYSNAME) TYPE(*CHAR) LEN(8)
+
+/* RESCATA EL USUARIO...*/
+             RTVJOBA    USER(&USER)
+
+             RTVSYSNAM  SYSNAME(&SYSNAME)
+
+/* BORRA EL CONTENIDO DE LA LDA...*/
+ GAUS02:     CHGDTAARA  DTAARA(*LDA (401 1)) VALUE(' ')
+             CHGDTAARA  DTAARA(*LDA (402 2)) VALUE('  ')
+             CHGDTAARA  DTAARA(*LDA (404 10)) VALUE('          ')
+             CHGDTAARA  DTAARA(*LDA (414 2)) VALUE('  ')
+             CHGDTAARA  DTAARA(*LDA (416 3)) VALUE('   ')
+             CHGDTAARA  DTAARA(*LDA (419 1)) VALUE(' ')
+             CHGDTAARA  DTAARA(*LDA (420 2)) VALUE('  ')
+             CHGDTAARA  DTAARA(*LDA (422 10)) VALUE('          ')
+             CHGDTAARA  DTAARA(*LDA (432 10)) VALUE('          ')
+             CHGDTAARA  DTAARA(*LDA (447 2)) VALUE('  ')
+
+/* MUESTRA LISTA DE BIBLIOTECAS PARA SELECCION...*/
+             CHGDTAARA  DTAARA(*LDA (57 2)) VALUE('  ')
+             CALL       PGM(GAUS02)
+             RTVDTAARA  DTAARA(*LDA (57 2)) RTNVAR(&LMAN)
+             IF         COND(&LMAN = 'KL') THEN(RETURN)
+
+/* ADICIONA LA BIBLIOTECA EN LA LISTA...*/
+             RTVDTAARA  DTAARA(*LDA (404 10)) RTNVAR(&LIBR)
+             ADDLIBLE   LIB(&LIBR) POSITION(*FIRST)
+
+/* MONITOREO DE MENSAJES POSIBLES...*/
+             MONMSG     MSGID(CPF2103)
+
+             MONMSG     MSGID(CPF2106) EXEC(DO)
+             SNDPGMMSG  MSGID(PGG0003) MSGF(*LIBL/PGGMSG) +
+                          MSGDTA(&LIBR) TOUSR(&USER)
+             RETURN
+             ENDDO
+
+             MONMSG     MSGID(CPF2110) EXEC(DO)
+             SNDPGMMSG  MSGID(PGG0004) MSGF(*LIBL/PGGMSG) +
+                          MSGDTA(&LIBR) TOUSR(&USER)
+             RETURN
+             ENDDO
+
+             MONMSG     MSGID(CPF2113) EXEC(DO)
+             SNDPGMMSG  MSGID(PGG0005) MSGF(*LIBL/PGGMSG) +
+                          MSGDTA(&LIBR) TOUSR(&USER)
+             RETURN
+             ENDDO
+
+             MONMSG     MSGID(CPF2118) EXEC(DO)
+             SNDPGMMSG  MSGID(PGG0006) MSGF(*LIBL/PGGMSG) +
+                          MSGDTA(&LIBR) TOUSR(&USER)
+             RETURN
+             ENDDO
+
+             MONMSG     MSGID(CPF2176) EXEC(DO)
+             SNDPGMMSG  MSGID(PGG0007) MSGF(*LIBL/PGGMSG) +
+                          MSGDTA(&LIBR) TOUSR(&USER)
+             RETURN
+             ENDDO
+
+             MONMSG     MSGID(CPF2182) EXEC(DO)
+             SNDPGMMSG  MSGID(PGG0008) MSGF(*LIBL/PGGMSG) +
+                          MSGDTA(&LIBR) TOUSR(&USER)
+             RETURN
+             ENDDO
+
+             IF         COND(&LIBR = 'AXAREAL' *OR &LIBR = +
+                          'TESTGAUS') THEN(DO)
+             ADDLIBLE   LIB(QUOMDATA) POSITION(*AFTER &LIBR)
+             MONMSG     MSGID(CPF2103 CPF2182)
+             ENDDO
+
+/* COLOCAR PRIMERO LAS BIBLIOTECAS DE USUARIO...*/
+/* PROGRAMAS...*/
+             RTVDTAARA  DTAARA(*LDA (432 10)) RTNVAR(&BIUP)
+             IF         COND(&BIUP *NE '          ') THEN(DO)
+             RMVLIBLE   LIB(&BIUP)
+             MONMSG     MSGID(CPF2110) /* No en disco */
+             MONMSG     MSGID(CPF2104) /* No en lista */
+             ADDLIBLE   LIB(&BIUP) POSITION(*FIRST)
+             MONMSG     MSGID(CPF2103 CPF2106 CPF2110 CPF2113 +
+                          CPF2118 CPF2176 CPF2182 CPD0078 CPA0071)
+             ENDDO
+
+/* ARCHIVOS...*/
+             RTVDTAARA  DTAARA(*LDA (422 10)) RTNVAR(&BIUA)
+             IF         COND(&BIUA *NE '          ') THEN(DO)
+             RMVLIBLE   LIB(&BIUA)
+             MONMSG     MSGID(CPF2110) /* No en disco */
+             MONMSG     MSGID(CPF2104) /* No en lista */
+             ADDLIBLE   LIB(&BIUA) POSITION(*FIRST)
+             MONMSG     MSGID(CPF2103 CPF2106 CPF2110 CPF2113 +
+                          CPF2118 CPF2176 CPF2182 CPD0078 CPA0071)
+             ENDDO
+
+/* SI HAY BIBLOTECA ESPECIAL DE ARCHVOS ENTONCES SE USA EL MODULO */
+/* DE SINIESTROS DE LA SEGU.SI1 ENTONCES SE COLOCA ESTA BILIOTECA */
+/* ANTES DE LA SEGU.SIN... */
+             IF         COND(&BIUA *NE '          ') THEN(DO)
+/*           ADDLIBLE   LIB(SEGU.SI1) POSITION(*BEFORE SEGU.PRO) +
+             MONMSG     MSGID(CPF2103 CPF2106 CPF2110 CPF2113 +
+                          CPF2118 CPF2176 CPF2182 CPD0078 CPA0071)*/
+             ENDDO
+
+             IF         COND(&SYSNAME = 'SOFTTEST') THEN(DO)
+             ADDLIBLE   LIB(TESTGAUS)
+             MONMSG     MSGID(CPF2103 CPF2106 CPF2110 CPF2113 +
+                          CPF2118 CPF2176 CPF2182 CPD0078 CPA0071)
+             ENDDO
+
+/* ------ Grabo si es sicone solo (sin gaus) */
+             CHGDTAARA  DTAARA(*LDA (442 1)) VALUE('S')
+             CHKOBJ     OBJ(&LIBR/SICONESOLO) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(CHGDTAARA DTAARA(*LDA +
+                          (442 1)) VALUE('N'))
+
+/* YA ESTA PUESTA EN LDA LA EMPRESA AHORA PONE LA SUCURSAL...    */
+             CALL       PGM(GAUS03)
+
+/* VERIFICAR TERMINACION ANORMAL EN CIERRES DIARIOSL...    */
+             RTVDTAARA  DTAARA(*LDA (57 2)) RTNVAR(&LMAN)
+             CALL       PGM(GAUS03A)
+             RTVDTAARA  DTAARA(*LDA (57 2)) RTNVAR(&LMAN)
+             IF         COND(&LMAN *EQ 'KL') THEN(DO)
+             SNDUSRMSG  MSG('ATENCION: No se puede iniciar la +
+                          actividad para el grupo empresario +
+                          seleccionado ya que se ha detectado UNA +
+                          TERMINACION ANORMAL EN LOS PROCESOS DE +
+                          CIERRES DIARIOS. Consulte con el +
+                          ADMINISTRADOR DEL SISTEMA PARA VERIFICAR +
+                          CUANDO LOS PROGRAMAS VOLVERAN A ESTAR +
+                          DISPONIBLES. Se cancela la petición y se +
+                          retorna a la lista de selección de grupos +
+                          empresarios.') MSGTYPE(*INFO) TOMSGQ(&USER)
+             GOTO       CMDLBL(REMOVER)
+             ENDDO
+
+/* SI NO RETORNO POR LOS PASOS ANTERIORES PASA AL PROXIMO MENU...*/
+ GAUS04:     CALL       PGM(GAUS04)
+
+/* ANALIZA MANDATOS DE SALIDA DEL GAUS04...                      */
+             RTVDTAARA  DTAARA(*LDA (57 2)) RTNVAR(&LMAN)
+
+ REMOVER:    IF         COND(&LMAN = 'KL') THEN(DO)
+             CHGDTAARA  DTAARA(*LDA (401 1)) VALUE(' ')
+             CHGDTAARA  DTAARA(*LDA (402 2)) VALUE('  ')
+             CHGDTAARA  DTAARA(*LDA (404 10)) VALUE('          ')
+             CHGDTAARA  DTAARA(*LDA (414 2)) VALUE('  ')
+             CHGDTAARA  DTAARA(*LDA (416 3)) VALUE('   ')
+             CHGDTAARA  DTAARA(*LDA (419 1)) VALUE(' ')
+             CHGDTAARA  DTAARA(*LDA (420 2)) VALUE('  ')
+             CHGDTAARA  DTAARA(*LDA (422 10)) VALUE('          ')
+             CHGDTAARA  DTAARA(*LDA (432 10)) VALUE('          ')
+             CHGDTAARA  DTAARA(*LDA (447 2)) VALUE('  ')
+             RMVLIBLE   LIB(&LIBR)
+             RMVLIBLE   LIB(QUOMDATA)
+             IF         COND(&BIUP *NE '          ') THEN(DO)
+/*           RMVLIBLE   LIB(&BIUP)      */
+/*           MONMSG     MSGID(CPF2110)  */
+             ENDDO
+             IF         COND(&BIUA *NE '          ') THEN(DO)
+             RMVLIBLE   LIB(&BIUA)
+             MONMSG     MSGID(CPF2110)
+             ENDDO
+             IF         COND(&SYSNAME = 'SOFTTEST') THEN(DO)
+             RMVLIBLE   LIB(TESTGAUS)
+             MONMSG     MSGID(CPF2110)
+             ENDDO
+             GOTO       CMDLBL(GAUS02)
+             ENDDO
+
+             IF         COND(&LMAN = 'KE') THEN(DO)
+             OVRDSPF    FILE(PRO095FM) TOFILE(AXA.FILE/PRO095FM)
+             CALL       PGM(AXA.FILE/PRO095) PARM(&CODI)
+             GOTO       CMDLBL(GAUS04)
+             ENDDO
+
+             IF         COND(&LMAN = 'KC') THEN(DO)
+             CHGDTAARA  DTAARA(*LDA (401 1)) VALUE(' ')
+             CHGDTAARA  DTAARA(*LDA (402 2)) VALUE('  ')
+             CHGDTAARA  DTAARA(*LDA (404 10)) VALUE('          ')
+             CHGDTAARA  DTAARA(*LDA (414 2)) VALUE('  ')
+             CHGDTAARA  DTAARA(*LDA (416 3)) VALUE('   ')
+             CHGDTAARA  DTAARA(*LDA (419 1)) VALUE(' ')
+             CHGDTAARA  DTAARA(*LDA (420 2)) VALUE('  ')
+             CHGDTAARA  DTAARA(*LDA (422 10)) VALUE('          ')
+             CHGDTAARA  DTAARA(*LDA (432 10)) VALUE('          ')
+             CHGDTAARA  DTAARA(*LDA (447 2)) VALUE('  ')
+             RMVLIBLE   LIB(&LIBR)
+             MONMSG     MSGID(CPF2104 CPF2110)
+             RMVLIBLE   LIB(QUOMDATA)
+             MONMSG     MSGID(CPF2110)
+             IF         COND(&BIUP *NE '          ') THEN(DO)
+/*           RMVLIBLE   LIB(&BIUP)           */
+/*           MONMSG     MSGID(CPF2110)       */
+             ENDDO
+             IF         COND(&BIUA *NE '          ') THEN(DO)
+             RMVLIBLE   LIB(&BIUA)
+             MONMSG     MSGID(CPF2110)
+             ENDDO
+             IF         COND(&SYSNAME = 'SOFTTEST') THEN(DO)
+             RMVLIBLE   LIB(TESTGAUS)
+             MONMSG     MSGID(CPF2110)
+             ENDDO
+             RETURN
+             ENDDO
+
+FINAL:       ENDPGM

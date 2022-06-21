@@ -1,0 +1,11 @@
+pgm
+
+             ENDWCH     SSNID(ENB_INF1)
+             MONMSG     MSGID(CPF39E1)
+
+             DLYJOB     DLY(30)
+
+             STRWCH     SSNID(ENB_INF1) WCHPGM(INF1SERG/WCHCPF1393) +
+                          WCHMSG((CPF1393))
+
+endpgm

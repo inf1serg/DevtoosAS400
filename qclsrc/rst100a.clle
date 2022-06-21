@@ -1,0 +1,17 @@
+PGM
+
+             DCL        VAR(&USER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DATETIME) TYPE(*CHAR) LEN(20)
+
+/* Armo lista */
+             CALL       PGM(TAATOOL/SPWLIBLC) PARM(P)
+
+/* Recupero atributos del job */
+             RTVJOBA    CURUSER(&USER)
+
+             IF         COND(&USER *NE 'INF1SERG') THEN(ADDLIBLE +
+                          LIB(INF1SERG))
+
+             CALL       PGM(RST100)
+
+ENDPGM

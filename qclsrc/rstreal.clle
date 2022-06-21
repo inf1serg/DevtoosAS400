@@ -1,0 +1,79 @@
+             PGM        PARM(&TAPE)
+
+             DCL        VAR(&TAPE) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&DEV) TYPE(*CHAR) LEN(10)
+
+/* monitoreo de mensajes     */
+             MONMSG     MSGID(CPF0001) EXEC(GOTO CMDLBL(ERROR))
+             MONMSG     MSGID(CPF5729) EXEC(GOTO CMDLBL(ERROR1))
+             MONMSG     MSGID(CPF3751) EXEC(GOTO CMDLBL(ERROR2))
+             MONMSG     MSGID(CPF3292 CPF3848 CPF3773)
+             MONMSG     MSGID(CPF0000)
+
+             CHGVAR VAR(&DEV) VALUE(&TAPE)
+
+/* ----------------------------------------------------------- */
+/* Eliminar LFs de AXAREAL atados a Bibliotecas INF1*          */
+/* ----------------------------------------------------------- */
+             CALL       PGM(DESATOOLS/RST002)
+
+/* ----------------------------------------------------------- */
+/* Trigger                                                     */
+/* ----------------------------------------------------------- */
+             RMVPFTRG   FILE(AXAREAL/GTI987)
+             MONMSG     MSGID(CPF32C6)
+
+/* ----------------------------------------------------------- */
+/* Servidores HTTP                                             */
+/* ----------------------------------------------------------- */
+             ENDTCPSVR  SERVER(*HTTP) HTTPSVR(QUOMWS01)
+             MONMSG     MSGID(CPF3894 TCP1A0A TCP1A11 TCP1A77 TCP1A18)
+             ENDTCPSVR  SERVER(*HTTP) HTTPSVR(QUOMWS02)
+             MONMSG     MSGID(CPF3894 TCP1A0A TCP1A11 TCP1A77 TCP1A18)
+             ENDTCPSVR  SERVER(*HTTP) HTTPSVR(QUOMDESA)
+             MONMSG     MSGID(CPF3894 TCP1A0A TCP1A11 TCP1A77 TCP1A18)
+             ENDTCPSVR  SERVER(*HTTP) HTTPSVR(WSREST)
+             MONMSG     MSGID(CPF3894 TCP1A0A TCP1A11 TCP1A77 TCP1A18)
+
+/* ----------------------------------------------------------- */
+/* AXA.FILE                                                    */
+/* ----------------------------------------------------------- */
+             CLRLIB     LIB(AXA.FILE)
+             RSTLIB     SAVLIB(AXA.FILE) DEV(&DEV) ENDOPT(*LEAVE) +
+                          MBROPT(*ALL) ALWOBJDIF(*ALL)
+
+/* ----------------------------------------------------------- */
+/* AXA.PGMR                                                    */
+/* ----------------------------------------------------------- */
+             CLRLIB     LIB(AXA.PGMR)
+             RSTLIB     SAVLIB(AXA.PGMR) DEV(&DEV) ENDOPT(*LEAVE) +
+                          MBROPT(*ALL) ALWOBJDIF(*ALL)
+
+/* ----------------------------------------------------------- */
+/* AXA.REAL                                                    */
+/* ----------------------------------------------------------- */
+             CLRLIB     LIB(AXAREAL)
+             RSTLIB     SAVLIB(AXAREAL) DEV(&DEV) ENDOPT(*LEAVE) +
+                          MBROPT(*ALL) ALWOBJDIF(*ALL)
+
+/* Autorizaciones */
+             CALL       PGM(DESATOOLS/RST001A)
+
+             GOTO       CMDLBL(FINAL)
+
+
+ ERROR:      SNDPGMMSG  MSG('Error de proceso, revisar las +
+                          anotaciones de trabajo (Tecla AYUDA y +
+                          luego F10)')
+             GOTO       CMDLBL(FINAL)
+
+ ERROR1:     SNDPGMMSG  MSG('No se ha podido asignar la cinta (Tecla +
+                          AYUDA y luego F10)')
+             GOTO       CMDLBL(FINAL)
+
+ ERROR2:     SNDPGMMSG  MSG('ARCHIVO en USO,  revisar las +
+                          anotaciones de trabajo (Tecla AYUDA y +
+                          luego F10)')
+             GOTO       CMDLBL(FINAL)
+ FINAL:
+        ENDPGM

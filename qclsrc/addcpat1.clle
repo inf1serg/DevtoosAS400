@@ -1,0 +1,71 @@
+/* ----------------------------------------------------------------- +
+   Este programa prepara el entorno para trabajar con las clases Java+
+   POI.                                                              +
+   El paquete POI permite todo el trabajo de generación y parseo de  +
+   hojas de cálculo Excel.                                           +
+                                                                     +
+   Este programa está pensado para ser llamado como programa incial  +
+   (o como parte de un menú como GAUS01) del usuario.                +
+   Gracias a ello, puede usarse en el futuro para cualquier otro gru-+
+   por de clases Java necesarias (iText para PDF, etc).              +
+                                                                     +
+   Es IMPORTANTE entender que en el System i, la JVM se arranca      +
+   (y sus variables son leídas) la primera vez que un programa       +
+   usa un objeto Java.                                               +
+   Por lo tanto, de nada sirve hacer cambios en tiempo de ejecución  +
+   Deberá reiniciarse el job (logoff/logon para un interactivo) para +
+   que los cambios tengan efectos.                                   +
+                                                                     +
+   Básicamente se setean acá tres cosas importantes:                 +
+                                                                     +
+   -- La variable CLASSPATH (para que contenga todos los JAR)        +
+   -- La variable QIBM_JAVA_PROPERTIES para controlar cómo RPG       +
+         arranca la JVM.                                             +
+   -- La variable JAVA_HOME para controlar cuál JVM usar.            +
+                                                                     +
+   NOTA: Hasta la V5R3M0 la forma de seleccionar qué JVM usar se     +
+         hacía seteando dentro de QIBM_JAVA_PROPERTIES lo siguiente: +
+                                                                     +
+         -Djava.version=1.4                                          +
+                                                                     +
+         Sin embargo, IBM ha desaprobado ese método y ha indicado    +
+         que la mejor manera de setear esto es con la nueva variable +
+         JAVA_HOME.                                                  +
+                                                                     +
+         En este caso, estoy usando la versión de 32-bit de IBM      +
+         (5722JV1, opt. 8). Si quisiera usar la versión "classic"    +
+         de la JVM (5722JV1, opt. 7), podría setearlo de la siguiente+
+         manera:                                                     +
+                                                                     +
+         ADDENVVAR ENVVAR(JAVA_HOME) +                               +
+                   VALUE('/QIBM/ProdData/Java400/jdk15') +           +
+                   REPLACE(*YES)                                     +
+                                                                     +
+   Sergio Fernandez                      *Feb-2014                   +
+------------------------------------------------------------------- */
+PGM
+
+    ADDENVVAR ENVVAR(CLASSPATH) +
+          VALUE('/javahdi/poi3.6/poi-3.6-20091214.jar+
+                :/javahdi/poi3.6/poi-ooxml-3.6-20091214.jar+
+                :/javahdi/poi3.6/poi-ooxml-schemas-3.6-20091214.jar+
+                :/javahdi/dom4j/dom4j-1.6.1.jar+
+                :/javahdi/xmlbeans/jsr173_1.0_api.jar+
+                :/javahdi/xmlbeans/xbean.jar+
+                :/javahdi/jdbc/jtds-1.2.3.jar+
+                :/javahdi/jdbc/jt400.jar+
+                :/javahdi/jdbc/WriteIfs.jar') +
+               LEVEL(*JOB) +
+               REPLACE(*YES)
+
+    ADDENVVAR ENVVAR(QIBM_RPG_JAVA_PROPERTIES) +
+               VALUE('-Djava.awt.headless=true;+
+                   -Dos400.awt.native=true;') +
+               REPLACE(*YES)
+
+    ADDENVVAR ENVVAR(JAVA_HOME) +
+               VALUE('/QOpenSys/QIBM/ProdData/JavaVM/jdk70/32bit') +
+               REPLACE(*YES)
+               return
+
+ENDPGM

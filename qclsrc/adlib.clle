@@ -1,0 +1,13 @@
+/* ADLIB - ADICION DE BIBLIOTECAS PARA TRABAJAR EN GAUS/400...*/
+/*   F***************************************************************/
+/*   F*                   M O D I F I C A C I O N E S               */
+/*   F* HDT-HDT -27/01/94 -Agrego CNEG.CXC                          */
+/*   F* HDT-HDT -02/05/94 -Agrego CNEG.STK                          */
+/*   F* HDT-HDT -10/10/96 -Agrego SEGU.ART                          */
+/*   F* SGF-SGF -25/09/14 -Elimino bibliotecas según pedido 2908.   */
+/*   F*                                                             */
+/*   F***************************************************************/
+ INICIO:     PGM
+             MONMSG     MSGID(CPF2103 CPF2110 CPF2182)
+             ADDLIBLE   LIB(GCTA.SEG)
+ FINAL:      ENDPGM
